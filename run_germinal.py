@@ -2,6 +2,8 @@
 Run Germinal for Antibody design.
 """
 
+import os
+import sys
 import time
 from omegaconf import DictConfig
 import hydra
@@ -13,6 +15,33 @@ from germinal.design.design import germinal_design
 from germinal.filters import filter_utils, redesign
 from germinal.utils import utils, config
 from germinal.utils.io import Trajectory
+
+
+def _handle_autotarget():
+    """Check for --autotarget flag, print protein info, and exit if found."""
+    autotarget_url = None
+    remaining = []
+    for arg in sys.argv[1:]:
+        if arg.startswith("--autotarget="):
+            autotarget_url = arg.split("=", 1)[1]
+        else:
+            remaining.append(arg)
+
+    if autotarget_url is None:
+        return
+
+    from germinal.utils.autotarget import fetch_protein_info, fold_and_save, identify_hotspots, create_target_config
+    gene_name, sequence = fetch_protein_info(autotarget_url)
+    print(f"Protein name: {gene_name}")
+    print(f"Sequence: {sequence}")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    pdbs_dir = os.path.join(script_dir, "pdbs")
+    pdb_path = fold_and_save(gene_name, sequence, pdbs_dir)
+    hotspots = identify_hotspots(pdb_path)
+    print(f"Top hotspots: {', '.join(hotspots)}")
+    configs_target_dir = os.path.join(script_dir, "configs", "target")
+    create_target_config(pdb_path, hotspots, configs_target_dir)
+    sys.exit(0)
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
@@ -254,4 +283,5 @@ def main(cfg: DictConfig):
 
 
 if __name__ == "__main__":
+    _handle_autotarget()
     main()
