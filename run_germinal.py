@@ -18,17 +18,23 @@ from germinal.utils.io import Trajectory
 
 
 def _handle_autotarget():
-    """Check for --autotarget flag, print protein info, and exit if found."""
+    """Check for --autotarget flag; if present, run the autotarget pipeline then launch germinal."""
     autotarget_url = None
-    remaining = []
+    passthrough_args = []
     for arg in sys.argv[1:]:
         if arg.startswith("--autotarget="):
             autotarget_url = arg.split("=", 1)[1]
         else:
-            remaining.append(arg)
+            passthrough_args.append(arg)
 
     if autotarget_url is None:
         return
+
+    # Forbid explicit target overrides — autotarget owns the target config
+    target_args = [a for a in passthrough_args if a.startswith("target=") or a.startswith("target.")]
+    if target_args:
+        print(f"Error: target arguments cannot be used with --autotarget: {', '.join(target_args)}")
+        sys.exit(1)
 
     from germinal.utils.autotarget import fetch_protein_info, fold_and_save, identify_hotspots, create_target_config
     gene_name, sequence = fetch_protein_info(autotarget_url)
@@ -41,7 +47,12 @@ def _handle_autotarget():
     print(f"Top hotspots: {', '.join(hotspots)}")
     configs_target_dir = os.path.join(script_dir, "configs", "target")
     create_target_config(pdb_path, hotspots, configs_target_dir)
-    sys.exit(0)
+
+    # Derive the Hydra target config name from the PDB stem (e.g. "syt4" or "syt4_1")
+    config_name = os.path.splitext(os.path.basename(pdb_path))[0].lower()
+
+    # Rewrite sys.argv so Hydra sees: target=<config_name> plus any passthrough args
+    sys.argv = [sys.argv[0], f"target={config_name}"] + passthrough_args
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
