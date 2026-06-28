@@ -17,27 +17,27 @@ from germinal.utils import utils, config
 from germinal.utils.io import Trajectory
 
 
-def _handle_autotarget():
-    """Check for --autotarget flag; if present, run the autotarget pipeline then launch germinal."""
-    autotarget_url = None
+def _handle_proteinmaxx():
+    """Check for --proteinmaxx flag; if present, run the proteinmaxx pipeline then launch germinal."""
+    proteinmaxx_url = None
     passthrough_args = []
     for arg in sys.argv[1:]:
-        if arg.startswith("--autotarget="):
-            autotarget_url = arg.split("=", 1)[1]
+        if arg.startswith("--proteinmaxx="):
+            proteinmaxx_url = arg.split("=", 1)[1]
         else:
             passthrough_args.append(arg)
 
-    if autotarget_url is None:
+    if proteinmaxx_url is None:
         return
 
-    # Forbid explicit target overrides — autotarget owns the target config
+    # Forbid explicit target overrides — proteinmaxx owns the target config
     target_args = [a for a in passthrough_args if a.startswith("target=") or a.startswith("target.")]
     if target_args:
-        print(f"Error: target arguments cannot be used with --autotarget: {', '.join(target_args)}")
+        print(f"Error: target arguments cannot be used with --proteinmaxx: {', '.join(target_args)}")
         sys.exit(1)
 
-    from germinal.utils.autotarget import fetch_protein_info, fold_and_save, identify_hotspots, create_target_config
-    gene_name, sequence = fetch_protein_info(autotarget_url)
+    from germinal.utils.proteinmaxx import fetch_protein_info, fold_and_save, identify_hotspots, create_target_config
+    gene_name, sequence = fetch_protein_info(proteinmaxx_url)
     print(f"Protein name: {gene_name}")
     print(f"Sequence: {sequence}")
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -294,5 +294,5 @@ def main(cfg: DictConfig):
 
 
 if __name__ == "__main__":
-    _handle_autotarget()
+    _handle_proteinmaxx()
     main()

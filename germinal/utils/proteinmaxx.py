@@ -1,4 +1,4 @@
-"""Autotarget: fetch protein name and sequence from an NCBI protein page URL."""
+"""Proteinmaxx: fetch protein name and sequence from an NCBI protein page URL."""
 
 import os
 import re
