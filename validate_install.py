@@ -82,6 +82,13 @@ def main() -> int:
             "See README for details."
         )
 
+    print_status("INFO", "Checking freesasa (optional, required for --proteinmaxx)")
+    try:
+        import freesasa  # type: ignore
+        print_status("OK", "freesasa available")
+    except Exception:
+        print_status("WARN", "freesasa not found. Install via: pip install freesasa")
+
     print_status("OK", "All checks passed")
     return 0
 

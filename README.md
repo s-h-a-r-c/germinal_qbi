@@ -125,6 +125,10 @@ All five tracked configs in `configs/run/` now expose:
 - [AlphaFold3 parameters](https://github.com/google-deepmind/alphafold3) (optional)
 - JAX with GPU support
 
+**External services (used by `--proteinmaxx`, no additional packages required):**
+- [NCBI Entrez API](https://www.ncbi.nlm.nih.gov/books/NBK25501/) — fetches protein name and sequence from an NCBI protein accession URL
+- [ESMAtlas API](https://esmatlas.com/about#api) — folds the retrieved sequence into a PDB via ESMFold; requires internet access at runtime
+
 **System Requirements:**
 - **GPU**: NVIDIA GPU with CUDA support
 - **Memory**: 40GB+ VRAM*
