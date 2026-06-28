@@ -97,6 +97,7 @@ All five tracked configs in `configs/run/` now expose:
    * [Basic Usage](#basic-usage)
    * [CLI Overrides](#cli-overrides)
    * [Target Configuration](#target-configuration)
+   * [Proteinmaxx: Auto-Target from NCBI URL](#proteinmaxx)
    * [Filters Configuration](#filters-configuration)
    * [AF3 Configuration](#af3)
    * [Protenix Configuration](#protenix)
@@ -350,6 +351,31 @@ target_hotspots: "25,26,39,41"
 dimer: false  # support coming soon!
 length: 133
 ```
+
+<!-- TOC --><a name="proteinmaxx"></a>
+### Proteinmaxx: Auto-Target from NCBI URL
+
+Proteinmaxx automates target setup when you have an NCBI protein page URL but no PDB file or hotspot list yet. Pass `--proteinmaxx=<url>` to `run_germinal.py` and the pipeline will:
+
+1. Fetch the protein's gene name and amino acid sequence from the NCBI Entrez API using the accession in the URL
+2. Fold the sequence into a PDB file via the [ESMAtlas ESMFold API](https://esmatlas.com/about#api) and save it to `pdbs/`
+3. Identify the top 3 solvent-exposed residues by SASA using `freesasa` as the initial hotspot set
+4. Write a target config YAML to `configs/target/` and launch Germinal with that target automatically
+
+**Requirements:** internet access at runtime; `freesasa` installed (included in `environment_setup.md`).
+
+**Basic usage:**
+```bash
+python run_germinal.py --proteinmaxx=https://www.ncbi.nlm.nih.gov/protein/NP_055093.1
+```
+
+**With additional Germinal arguments** — any flags not consumed by `--proteinmaxx` are passed through to Hydra as normal:
+```bash
+python run_germinal.py --proteinmaxx=https://www.ncbi.nlm.nih.gov/protein/NP_055093.1 \
+  run=vhh max_trajectories=200 experiment_name=my_target
+```
+
+> **Note:** `target=` and `target.*` overrides cannot be combined with `--proteinmaxx` — Proteinmaxx owns the target config. To customise the target after the initial run, edit the generated YAML in `configs/target/` and run Germinal normally with `target=<config_name>`.
 
 <!-- TOC --><a name="filters-configuration"></a>
 ### Filters Configuration
